@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>تم الطلب — متجرك</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2430; --paper:#EDEAE1; --canvas:#FFFFFF;
+    --ochre:#C97A22; --ochre-deep:#A8601A; --pine:#3C4A3E;
+    --line:#DAD5C8; --muted:#6B6659; --danger:#B23B3B;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{ background:var(--paper); color:var(--ink); font-family:'Tajawal',sans-serif; line-height:1.6; }
+  .serif{ font-family:'Amiri',serif; }
+  .wrap{ max-width:720px; margin:0 auto; padding:80px 24px; }
+  .state{ text-align:center; }
+  .badge{
+    width:64px; height:64px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    margin:0 auto 22px; font-size:1.8rem; color:#fff;
+  }
+  .badge.ok{ background:var(--pine); }
+  .badge.wait{ background:var(--ochre); }
+  .badge.fail{ background:var(--danger); }
+  h1{ font-size:1.7rem; margin-bottom:10px; }
+  p.sub{ color:var(--muted); max-width:44ch; margin:0 auto 30px; }
+  .items{
+    background:var(--canvas); border:1px solid var(--line); border-radius:12px;
+    padding:6px 22px; text-align:right; margin-bottom:28px;
+  }
+  .item-row{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:16px 0; border-bottom:1px solid var(--line);
+    gap:14px;
+  }
+  .item-row:last-child{ border-bottom:none; }
+  .item-name{ font-weight:700; font-size:0.96rem; }
+  .item-qty{ color:var(--muted); font-size:0.85rem; }
+  .view-btn{
+    background:var(--ink); color:var(--paper); font-weight:700; font-size:0.85rem;
+    padding:9px 16px; border-radius:8px; text-decoration:none; white-space:nowrap;
+    display:inline-block;
+  }
+  .view-btn:hover{ background:var(--ochre-deep); }
+  .ship-tag{
+    color:var(--pine); font-size:0.82rem; font-weight:700;
+  }
+  .home-link{
+    color:var(--muted); font-size:0.9rem; text-decoration:underline;
+  }
+  .spinner{
+    width:26px; height:26px; border-radius:50%;
+    border:3px solid rgba(0,0,0,0.12); border-top-color:var(--ochre);
+    animation:spin 0.8s linear infinite; margin:0 auto 22px;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+
+  .pdf-frame{
+    width:100%; height:70vh; border:1px solid var(--line); border-radius:10px; margin-top:14px;
+    display:none;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="loadingState" class="state">
+    <div class="spinner"></div>
+    <h1 class="serif">جارٍ التحقق من عملية الدفع...</h1>
+    <p class="sub">لحظات ويظهر تأكيد طلبك.</p>
+  </div>
+
+  <div id="paidState" class="state" style="display:none;">
+    <div class="badge ok">✓</div>
+    <h1 class="serif">تم تأكيد الدفع، شكرًا لطلبك</h1>
+    <p class="sub">المنتجات الرقمية جاهزة للعرض الآن مباشرة من هذه الصفحة. المنتجات الأخرى راح تُشحن لعنوانك.</p>
+    <div class="items" id="itemsList"></div>
+    <div id="viewerHolder"></div>
+    <a class="home-link" href="/index.html">رجوع للمتجر</a>
+  </div>
+
+  <div id="pendingState" class="state" style="display:none;">
+    <div class="badge wait">…</div>
+    <h1 class="serif">الدفع قيد التأكيد</h1>
+    <p class="sub">أحيانًا يستغرق تأكيد البنك للدفع بضع ثوانٍ. جرّب تحديث الصفحة خلال لحظات.</p>
+    <a class="home-link" href="/index.html">رجوع للمتجر</a>
+  </div>
+
+  <div id="errorState" class="state" style="display:none;">
+    <div class="badge fail">!</div>
+    <h1 class="serif">تعذّر العثور على الطلب</h1>
+    <p class="sub" id="errorMsg">تأكد من الرابط، أو تواصل معنا لو تكرر الأمر.</p>
+    <a class="home-link" href="/index.html">رجوع للمتجر</a>
+  </div>
+
+</div>
+
+<script>
+function show(id){
+  ['loadingState','paidState','pendingState','errorState'].forEach(s=>{
+    document.getElementById(s).style.display = (s===id) ? 'block' : 'none';
+  });
+}
+
+async function verify(){
+  const params = new URLSearchParams(window.location.search);
+  const sessionId = params.get('session_id');
+  if(!sessionId){
+    document.getElementById('errorMsg').textContent = 'ما فيه رقم جلسة دفع بالرابط.';
+    show('errorState');
+    return;
+  }
+
+  try {
+    const res = await fetch('/api/verify-session?session_id=' + encodeURIComponent(sessionId));
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || 'خطأ غير متوقع');
+
+    if(!data.paid){
+      show('pendingState');
+      return;
+    }
+
+    const list = document.getElementById('itemsList');
+    list.innerHTML = data.items.map(item => `
+      <div class="item-row">
+        <div>
+          <div class="item-name">${item.name}</div>
+          <div class="item-qty">الكمية: ${item.qty}</div>
+        </div>
+        ${
+          item.digital
+            ? `<a class="view-btn" href="#" data-view="${item.id}">عرض الملف</a>`
+            : `<span class="ship-tag">سيتم الشحن</span>`
+        }
+      </div>
+    `).join('');
+
+    list.querySelectorAll('[data-view]').forEach(btn=>{
+      btn.addEventListener('click', (e)=>{
+        e.preventDefault();
+        const id = btn.dataset.view;
+        const holder = document.getElementById('viewerHolder');
+        holder.innerHTML = `<iframe class="pdf-frame" style="display:block" src="/library/${data.token}/${id}"></iframe>`;
+      });
+    });
+
+    show('paidState');
+  } catch (err) {
+    document.getElementById('errorMsg').textContent = err.message;
+    show('errorState');
+  }
+}
+
+verify();
+</script>
+</body>
+</html>
