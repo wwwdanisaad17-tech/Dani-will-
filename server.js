@@ -92,94 +92,7 @@ function markOrderPaid(sessionId) {
   if (order.status !== 'paid') {
     order.status = 'paid';
     order.accessToken = order.accessToken || crypto.randomBytes(24).toString('hex');
-    order.paidAt = new Date().toISOString();
-    orders[sessionId] = order;
-    writeOrders(orders);
-  }
-  return order;
-}
-
-// ---------------------------------------------------------------------------
-// GET /api/products — the storefront loads its catalog from here so the
-// frontend and the pricing the server actually charges can never drift apart.
-// ---------------------------------------------------------------------------
-app.get('/api/products', (req, res) => {
-  res.json(PRODUCTS.map(({ file, ...pub }) => pub)); // never leak file paths
-});
-
-// ---------------------------------------------------------------------------
-// POST /api/create-checkout-session
-// body: { cart: { "<productId>": qty, ... } }
-// Creates a real Stripe Checkout session and returns its hosted URL.
-// ---------------------------------------------------------------------------
-app.post('/api/create-checkout-session', async (req, res) => {
-  try {
-    const cart = req.body.cart || {};
-    const entries = Object.entries(cart).filter(([, qty]) => qty > 0);
-    if (entries.length === 0) {
-      return res.status(400).json({ error: 'السلة فاضية' });
-    }
-
-    const line_items = entries.map(([id, qty]) => {
-      const p = getProduct(id);
-      if (!p) throw new Error('منتج غير معروف: ' + id);
-      return {
-        quantity: qty,
-        price_data: {
-          currency: 'sar',
-          unit_amount: Math.round(p.price * 100), // Stripe uses the smallest currency unit
-          product_data: { name: p.name },
-        },
-      };
-    });
-
-    const origin = `${req.protocol}://${req.get('host')}`;
-
-    const session = await stripe.checkout.sessions.create({
-      mode: 'payment',
-      line_items,
-      success_url: `${origin}/success.html?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${origin}/index.html`,
-      shipping_address_collection: { allowed_countries: ['SA', 'AE', 'KW', 'QA', 'BH', 'OM'] },
-      phone_number_collection: { enabled: true },
-    });
-
-    // Save a draft order right away so we have somewhere to mark "paid" later,
-    // whether that confirmation comes from the webhook or the success page.
-    const orders = readOrders();
-    orders[session.id] = {
-      status: 'pending',
-      items: entries.map(([id, qty]) => ({ id: Number(id), qty })),
-      createdAt: new Date().toISOString(),
-    };
-    writeOrders(orders);
-
-    res.json({ url: session.url });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// ---------------------------------------------------------------------------
-// GET /api/verify-session?session_id=...
-// Used by success.html right after Stripe redirects the buyer back.
-// Double-checks payment status directly with Stripe (covers the case where
-// the webhook hasn't arrived yet) and returns the order + access token.
-// ---------------------------------------------------------------------------
-app.get('/api/verify-session', async (req, res) => {
-  try {
-    const { session_id } = req.query;
-    if (!session_id) return res.status(400).json({ error: 'missing session_id' });
-
-    const session = await stripe.checkout.sessions.retrieve(session_id);
-    let order;
-    if (session.payment_status === 'paid') {
-      order = markOrderPaid(session_id);
-    } else {
-      const orders = readOrders();
-      order = orders[session_id];
-    }
+    order.paidAt = new Date().toISOString();}
 
     if (!order) return res.status(404).json({ error: 'order not found' });
 
@@ -211,4 +124,17 @@ app.get('/library/:token/:productId', (req, res) => {
 
   const owns = order.items.some(i => i.id === Number(productId));
   const product = getProduct(productId);
-  if (!owns || !produ
+  if (!owns || !product || !product.digital) {
+    return res.status(403).send('هذا المنتج غير مشمول بهذا الطلب.');
+  }
+
+  const filePath = path.join(FILES_DIR, product.file);
+  if (!fs.existsSync(filePath)) return res.status(404).send('الملف غير موجود على السيرفر.');
+
+  res.setHeader('Content-Disposition', `inline; filename="${encodeURIComponent(product.file)}"`);
+  res.sendFile(filePath);
+});
+
+app.listen(PORT, () => {
+  console.log(`✅ Store running: http://localhost:${PORT}`);
+});
