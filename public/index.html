@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>متجرك — واجهة متجر إلكتروني</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2430;
+    --paper:#EDEAE1;
+    --canvas:#FFFFFF;
+    --ochre:#C97A22;
+    --ochre-deep:#A8601A;
+    --pine:#3C4A3E;
+    --line:#DAD5C8;
+    --muted:#6B6659;
+    --danger:#B23B3B;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Tajawal',sans-serif;
+    line-height:1.6;
+  }
+  h1,h2,h3,.serif{ font-family:'Amiri',serif; }
+  img,svg{display:block;}
+  button{font-family:inherit; cursor:pointer; border:none; background:none;}
+  .wrap{ max-width:1180px; margin:0 auto; padding:0 24px; }
+
+  /* ---------------- HEADER ---------------- */
+  header{
+    position:sticky; top:0; z-index:60;
+    background:var(--paper);
+    border-bottom:1px solid var(--line);
+  }
+  .header-bar{
+    display:flex; align-items:center; justify-content:space-between;
+    height:78px; gap:20px;
+  }
+  .logo{
+    font-family:'Amiri',serif;
+    font-weight:700;
+    font-size:1.5rem;
+    display:flex; align-items:baseline; gap:8px;
+    flex-shrink:0;
+  }
+  .logo .mark{
+    color:var(--ochre-deep);
+  }
+  .cat-nav{
+    display:flex; gap:6px;
+    overflow-x:auto;
+    scrollbar-width:none;
+  }
+  .cat-nav::-webkit-scrollbar{ display:none; }
+  .cat-btn{
+    font-size:0.92rem;
+    font-weight:500;
+    color:var(--muted);
+    padding:9px 16px;
+    border-radius:999px;
+    white-space:nowrap;
+    transition:background .15s ease, color .15s ease;
+  }
+  .cat-btn:hover{ background:rgba(0,0,0,0.04); }
+  .cat-btn.active{
+    background:var(--ink);
+    color:var(--paper);
+  }
+  .cart-btn{
+    display:flex; align-items:center; gap:8px;
+    background:var(--ink);
+    color:var(--paper);
+    padding:11px 18px;
+    border-radius:10px;
+    font-weight:700;
+    font-size:0.92rem;
+    flex-shrink:0;
+    position:relative;
+  }
+  .cart-count{
+    background:var(--ochre);
+    color:var(--ink);
+    font-weight:800;
+    font-size:0.76rem;
+    min-width:20px; height:20px;
+    border-radius:999px;
+    display:flex; align-items:center; justify-content:center;
+    padding:0 5px;
+  }
+
+  /* ---------------- HERO / CATALOG COVER ---------------- */
+  .catalog-hero{
+    padding:64px 0 40px;
+    border-bottom:1px solid var(--line);
+  }
+  .catalog-hero .kicker{
+    color:var(--ochre-deep);
+    font-weight:700;
+    font-size:0.92rem;
+    margin-bottom:14px;
+    display:block;
+  }
+  .catalog-hero h1{
+    font-size:clamp(2rem, 4.4vw, 3.1rem);
+    font-weight:700;
+    max-width:16ch;
+    margin-bottom:18px;
+  }
+  .catalog-hero p{
+    color:var(--muted);
+    font-size:1.05rem;
+    max-width:52ch;
+  }
+  .hero-meta{
+    display:flex; gap:36px;
+    margin-top:36px;
+    flex-wrap:wrap;
+  }
+  .hero-meta div{ font-size:0.88rem; color:var(--muted); }
+  .hero-meta b{
+    display:block; font-family:'Amiri',serif; font-size:1.6rem; color:var(--ink); font-weight:700;
+  }
+
+  /* ---------------- SHOP GRID ---------------- */
+  .shop-section{ padding:48px 0 100px; }
+  .shop-head{
+    display:flex; align-items:baseline; justify-content:space-between;
+    margin-bottom:28px;
+    padding-bottom:16px;
+    border-bottom:2px solid var(--ink);
+  }
+  .shop-head h2{ font-size:1.5rem; font-weight:700; }
+  .shop-head .count{ color:var(--muted); font-size:0.9rem; }
+
+  .product-grid{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:1px;
+    background:var(--line);
+    border:1px solid var(--line);
+  }
+  .product-card{
+    background:var(--paper);
+    display:flex; flex-direction:column;
+    padding:0;
+  }
+  .product-visual{
+    aspect-ratio:1/1;
+    display:flex; align-items:center; justify-content:center;
+    position:relative;
+    cursor:pointer;
+  }
+  .product-visual svg{ width:42%; height:42%; }
+  .product-no{
+    position:absolute; top:12px; inset-inline-start:12px;
+    font-family:'Amiri',serif;
+    font-size:0.85rem;
+    color:rgba(27,36,48,0.45);
+  }
+  .product-info{
+    padding:16px 18px 20px;
+    display:flex; flex-direction:column; gap:6px;
+    flex:1;
+  }
+  .product-cat{
+    font-size:0.76rem;
+    color:var(--pine);
+    font-weight:700;
+  }
+  .product-name{
+    font-size:1rem;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .product-bottom{
+    margin-top:auto;
+    display:flex; align-items:center; justify-content:space-between;
+    padding-top:10px;
+  }
+  .product-price{
+    font-family:'Amiri',serif;
+    font-weight:700;
+    font-size:1.15rem;
+  }
+  .add-btn{
+    background:var(--ink);
+    color:var(--paper);
+    font-size:0.82rem;
+    font-weight:700;
+    padding:9px 14px;
+    border-radius:7px;
+    transition:background .15s ease, transform .12s ease;
+  }
+  .add-btn:hover{ background:var(--ochre-deep); }
+  .add-btn:active{ transform:scale(0.96); }
+  .add-btn.added{ background:var(--pine); }
+
+  /* ---------------- CART DRAWER ---------------- */
+  .overlay{
+    position:fixed; inset:0;
+    background:rgba(27,36,48,0.4);
+    z-index:90;
+    opacity:0; pointer-events:none;
+    transition:opacity .25s ease;
+  }
+  .overlay.open{ opacity:1; pointer-events:auto; }
+
+  .drawer{
+    position:fixed; top:0; bottom:0; inset-inline-end:0;
+    width:min(420px, 100%);
+    background:var(--canvas);
+    z-index:100;
+    display:flex; flex-direction:column;
+    transform:translateX(100%);
+    transition:transform .3s cubic-bezier(.4,0,.2,1);
+    box-shadow:-20px 0 50px rgba(0,0,0,0.15);
+  }
+  html[dir="rtl"] .drawer{ transform:translateX(-100%); }
+  .drawer.open{ transform:translateX(0); }
+  html[dir="rtl"] .drawer.open{ transform:translateX(0); }
+
+  .drawer-head{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:22px 24px;
+    border-bottom:1px solid var(--line);
+  }
+  .drawer-head h3{ font-size:1.3rem; }
+  .close-btn{ font-size:1.4rem; color:var(--muted); line-height:1; padding:4px; }
+
+  .drawer-body{ flex:1; overflow-y:auto; padding:8px 24px; }
+  .cart-line{
+    display:flex; gap:14px;
+    padding:18px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .cart-line-visual{
+    width:68px; height:68px; flex-shrink:0;
+    display:flex; align-items:center; justify-content:center;
+    border-radius:8px;
+  }
+  .cart-line-visual svg{ width:55%; height:55%; }
+  .cart-line-info{ flex:1; display:flex; flex-direction:column; gap:4px; }
+  .cart-line-name{ font-weight:700; font-size:0.95rem; }
+  .cart-line-price{ font-family:'Amiri',serif; color:var(--muted); font-size:0.92rem; }
+  .qty-row{
+    display:flex; align-items:center; gap:10px; margin-top:4px;
+  }
+  .qty-btn{
+    width:26px; height:26px; border-radius:6px;
+    border:1px solid var(--line);
+    display:flex; align-items:center; justify-content:center;
+    font-weight:700;
+  }
+  .qty-btn:hover{ background:var(--paper); }
+  .remove-link{
+    font-size:0.8rem; color:var(--danger); text-decoration:underline;
+    margin-inline-start:auto;
+    align-self:flex-start;
+  }
+  .empty-cart{
+    text-align:center; padding:60px 20px; color:var(--muted);
+  }
+
+  .drawer-foot{
+    border-top:1px solid var(--line);
+    padding:20px 24px 26px;
+  }
+  .subtotal-row{
+    display:flex; justify-content:space-between;
+    font-size:1rem; margin-bottom:16px;
+  }
+  .subtotal-row b{ font-family:'Amiri',serif; font-size:1.3rem; }
+  .checkout-btn{
+    width:100%;
+    background:var(--ink);
+    color:var(--paper);
+    padding:15px;
+    border-radius:9px;
+    font-weight:700;
+    font-size:1rem;
+    transition:background .15s ease;
+  }
+  .checkout-btn:hover{ background:var(--ochre-deep); }
+  .checkout-btn:disabled{ opacity:0.4; cursor:not-allowed; }
+
+  /* ---------------- CHECKOUT VIEW ---------------- */
+  .checkout-view{
+    display:none;
+    padding:56px 0 100px;
+  }
+  .checkout-view.active{ display:block; }
+  .shop-view.hidden{ display:none; }
+
+  .checkout-grid{
+    display:grid;
+    grid-template-columns:1.2fr 0.8fr;
+    gap:48px;
+    align-items:start;
+  }
+  .back-link{
+    display:inline-flex; align-items:center; gap:6px;
+    color:var(--muted); font-size:0.9rem; margin-bottom:28px;
+  }
+  .checkout-form h2{ font-size:1.6rem; margin-bottom:24px; }
+  .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:14px; }
+  .field{ display:flex; flex-direction:column; gap:6px; margin-bottom:14px; }
+  .field label{ font-size:0.85rem; font-weight:700; color:var(--ink); }
+  .field input, .field textarea{
+    border:1px solid var(--line);
+    background:var(--canvas);
+    border-radius:8px;
+    padding:12px 14px;
+    font-family:inherit;
+    font-size:0.95rem;
+    color:var(--ink);
+  }
+  .field input:focus, .field textarea:focus{
+    outline:2px solid var(--ochre);
+    outline-offset:1px;
+  }
+  .pay-options{ display:flex; flex-direction:column; gap:10px; margin:22px 0 28px; }
+  .pay-option{
+    display:flex; align-items:center; gap:12px;
+    border:1px solid var(--line);
+    border-radius:9px;
+    padding:14px 16px;
+    cursor:pointer;
+  }
+  .pay-option input{ width:16px; height:16px; }
+  .pay-option.selected{ border-color:var(--ink); background:var(--canvas); }
+  .demo-note{
+    background:#F4E9D8;
+    border:1px solid #E4CFA3;
+    color:#7A5A1E;
+    font-size:0.86rem;
+    padding:12px 16px;
+    border-radius:8px;
+    margin-bottom:24px;
+  }
+  .place-order-btn{
+    background:var(--ink);
+    color:var(--paper);
+    padding:16px 34px;
+    border-radius:9px;
+    font-weight:700;
+    font-size:1rem;
+    width:100%;
+  }
+  .place-order-btn:hover{ background:var(--ochre-deep); }
+
+  .order-summary{
+    background:var(--canvas);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:24px;
+    position:sticky; top:100px;
+  }
+  .order-summary h3{ font-size:1.15rem; margin-bottom:18px; }
+  .summary-line{
+    display:flex; justify-content:space-between;
+    font-size:0.92rem; padding:8px 0;
+    border-bottom:1px solid var(--line);
+  }
+  .summary-total{
+    display:flex; justify-content:space-between;
+    font-weight:700; font-size:1.1rem;
+    margin-top:14px; padding-top:14px;
+    border-top:2px solid var(--ink);
+  }
+  .summary-total b{ font-family:'Amiri',serif; font-size:1.35rem; }
+
+  /* ---------------- CONFIRMATION ---------------- */
+  .confirm-view{
+    display:none;
+    padding:100px 0;
+    text-align:center;
+  }
+  .confirm-view.active{ display:block; }
+  .confirm-badge{
+    width:72px; height:72px; border-radius:50%;
+    background:var(--pine); color:var(--paper);
+    display:flex; align-items:center; justify-content:center;
+    margin:0 auto 24px;
+    font-size:2rem;
+  }
+  .confirm-view h2{ font-size:1.9rem; margin-bottom:12px; }
+  .confirm-view p{ color:var(--muted); max-width:44ch; margin:0 auto 8px; }
+  .confirm-order-no{
+    font-family:'Amiri',serif; font-size:1.2rem; margin:20px 0 32px;
+    color:var(--ochre-deep); font-weight:700;
+  }
+  .confirm-view .add-btn{ display:inline-block; padding:14px 30px; font-size:0.95rem; }
+
+  /* ---------------- RESPONSIVE ---------------- */
+  @media (max-width:980px){
+    .product-grid{ grid-template-columns:repeat(2, 1fr); }
+    .checkout-grid{ grid-template-columns:1fr; }
+    .order-summary{ position:static; }
+    .cat-nav{ order:3; width:100%; }
+    .header-bar{ flex-wrap:wrap; height:auto; padding:14px 0; gap:12px; }
+  }
+  @media (max-width:520px){
+    .field-row{ grid-template-columns:1fr; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{ transition:none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap header-bar">
+    <div class="logo"><span class="mark">◆</span> متجرك</div>
+    <nav class="cat-nav" id="catNav"></nav>
+    <button class="cart-btn" id="cartOpenBtn">
+      السلة
+      <span class="cart-count" id="cartCount">0</span>
+    </button>
+  </div>
+</header>
+
+<main id="shopView" class="shop-view">
+  <section class="catalog-hero">
+    <div class="wrap">
+      <span class="kicker">إصدار الموسم الحالي</span>
+      <h1 class="serif">كل قطعة مختارة بعناية، بفهرس واحد</h1>
+      <p>ملابس وإكسسوارات ومنتجات رقمية — كل منتج مرقّم ومُصنّف عشان توصل لطلبك بسرعة.</p>
+      <div class="hero-meta">
+        <div><b id="metaCount">—</b>منتج بالفهرس</div>
+        <div><b>٣</b>تصنيفات</div>
+        <div><b>توصيل</b>لكل المناطق</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="shop-section">
+    <div class="wrap">
+      <div class="shop-head">
+        <h2 id="shopTitle">كل المنتجات</h2>
+        <span class="count" id="shopCount"></span>
+      </div>
+      <div class="product-grid" id="productGrid"></div>
+    </div>
+  </section>
+</main>
+
+<section id="checkoutView" class="checkout-view">
+  <div class="wrap">
+    <button class="back-link" id="backToShop">→ رجوع للمتجر</button>
+    <div class="checkout-grid">
+      <div class="checkout-form">
+        <h2 class="serif">إتمام الطلب</h2>
+        <p style="color:var(--muted); margin-bottom:24px;">بتنتقل لصفحة دفع آمنة من Stripe لإدخال بيانات البطاقة والشحن. رجوع تلقائي لهون بعد الدفع.</p>
+        <div class="pay-options">
+          <div class="pay-option selected" style="cursor:default;">🔒 بطاقة ائتمان / مدى — عبر Stripe Checkout</div>
+        </div>
+        <button id="goStripeBtn" class="place-order-btn">المتابعة للدفع الآمن</button>
+        <p id="checkoutError" style="color:var(--danger); font-size:0.88rem; margin-top:12px; display:none;"></p>
+      </div>
+
+      <div class="order-summary">
+        <h3>ملخص الطلب</h3>
+        <div id="summaryLines"></div>
+        <div class="summary-line">
+          <span>الشحن</span>
+          <span>يُحسب في صفحة الدفع</span>
+        </div>
+        <div class="summary-total">
+          <span>الإجمالي</span>
+          <b id="summaryTotal">٠ ر.س</b>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="cartDrawer">
+  <div class="drawer-head">
+    <h3 class="serif">سلة المشتريات</h3>
+    <button class="close-btn" id="closeDrawer">✕</button>
+  </div>
+  <div class="drawer-body" id="drawerBody"></div>
+  <div class="drawer-foot">
+    <div class="subtotal-row">
+      <span>الإجمالي</span>
+      <b id="drawerTotal">٠ ر.س</b>
+    </div>
+    <button class="checkout-btn" id="goCheckoutBtn">إتمام الشراء</button>
+  </div>
+</aside>
+
+<script>
+/* ---------------- ICONS (simple line-art placeholders) ---------------- */
+const ICONS = {
+  shirt: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M8 3 L4 6 L2 9 L5 11 L7 9 V21 H17 V9 L19 11 L22 9 L20 6 L16 3 C16 3 14.5 5 12 5 C9.5 5 8 3 8 3Z" stroke-linejoin="round"/></svg>`,
+  hoodie: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M7 4 C7 4 9 2 12 2 C15 2 17 4 17 4 L21 8 L18 10 L17 8.5 V21 H7 V8.5 L6 10 L3 8 Z" stroke-linejoin="round"/><path d="M9 4.5 C9 7 10 8 12 8 C14 8 15 7 15 4.5" /></svg>`,
+  cap: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 14 C3 8 7 5 12 5 C17 5 21 8 21 14" /><path d="M21 14 C21 14 23 15 23 16.5 C23 17.5 21.5 17.5 20 16.5 L18 14.5" /><path d="M3 14 H21" /></svg>`,
+  bag: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="4" y="8" width="16" height="13" rx="2"/><path d="M8 8 V6 C8 3.8 9.8 2 12 2 C14.2 2 16 3.8 16 6 V8"/></svg>`,
+  mug: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M5 6 H16 V16 C16 18.2 14.2 20 12 20 H9 C6.8 20 5 18.2 5 16 Z"/><path d="M16 8 H18 C19.6 8 21 9.4 21 11 C21 12.6 19.6 14 18 14 H16"/></svg>`,
+  wallet: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10 H21"/><circle cx="17" cy="14" r="1.4" fill="currentColor" stroke="none"/></svg>`,
+  sunglasses: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><circle cx="6.5" cy="13" r="3.5"/><circle cx="17.5" cy="13" r="3.5"/><path d="M10 12 H14 M3 12 L1 8 M21 12 L23 8"/></svg>`,
+  book: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M4 5 C4 5 7 4 12 5.5 C17 4 20 5 20 5 V19 C20 19 17 18 12 19.5 C7 18 4 19 4 19 Z"/><path d="M12 5.5 V19.5"/></svg>`,
+  planner: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><rect x="4" y="4" width="16" height="17" rx="1.5"/><path d="M4 9 H20 M8 4 V2 M16 4 V2 M8 13 H10 M13 13 H16 M8 17 H10 M13 17 H16"/></svg>`,
+};
+
+const CATS = [
+  { id:'all', label:'الكل' },
+  { id:'clothes', label:'ملابس' },
+  { id:'accessories', label:'إكسسوارات' },
+  { id:'digital', label:'منتجات رقمية' },
+];
+
+// Display-only info (icon/color/index/Arabic category label) per product id.
+// Prices and names come from the SERVER (/api/products) so the storefront
+// can never show a different price than what Stripe will actually charge.
+const DISPLAY_META = {
+  1:{ no:'٠١', icon:'shirt', tint:'#E4DCC7', catLabel:'ملابس' },
+  2:{ no:'٠٢', icon:'hoodie', tint:'#DCE0D4', catLabel:'ملابس' },
+  3:{ no:'٠٣', icon:'cap', tint:'#E9D9C3', catLabel:'ملابس' },
+  4:{ no:'٠٤', icon:'shirt', tint:'#DDE3E6', catLabel:'ملابس' },
+  5:{ no:'٠٥', icon:'bag', tint:'#E2DACB', catLabel:'إكسسوارات' },
+  6:{ no:'٠٦', icon:'mug', tint:'#DEE5DD', catLabel:'إكسسوارات' },
+  7:{ no:'٠٧', icon:'wallet', tint:'#E7DCC9', catLabel:'إكسسوارات' },
+  8:{ no:'٠٨', icon:'sunglasses', tint:'#DEE0E6', catLabel:'إكسسوارات' },
+  9:{ no:'٠٩', icon:'book', tint:'#E9DFCB', catLabel:'رقمي' },
+  10:{ no:'١٠', icon:'planner', tint:'#DFE3D9', catLabel:'رقمي' },
+};
+
+/* ---------------- STATE ---------------- */
+let activeCat = 'all';
+let cart = {}; // { productId: qty }
+let PRODUCTS = [];
+
+/* ---------------- HELPERS ---------------- */
+function fmtPrice(n){ return n.toLocaleString('ar') + ' ر.س'; }
+function getProduct(id){ return PRODUCTS.find(p => p.id === id); }
+function cartCount(){ return Object.values(cart).reduce((a,b)=>a+b, 0); }
+function cartTotal(){
+  return Object.entries(cart).reduce((sum, [id, qty]) => sum + getProduct(Number(id)).price * qty, 0);
+}
+
+/* ---------------- RENDER: NAV ---------------- */
+function renderCatNav(){
+  const nav = document.getElementById('catNav');
+  nav.innerHTML = CATS.map(c =>
+    `<button class="cat-btn ${c.id===activeCat?'active':''}" data-cat="${c.id}">${c.label}</button>`
+  ).join('');
+  nav.querySelectorAll('.cat-btn').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      activeCat = btn.dataset.cat;
+      renderCatNav();
+      renderGrid();
+    });
+  });
+}
+
+/* ---------------- RENDER: GRID ---------------- */
+function renderGrid(){
+  const list = activeCat === 'all' ? PRODUCTS : PRODUCTS.filter(p => p.cat === activeCat);
+  document.getElementById('shopTitle').textContent = activeCat === 'all' ? 'كل المنتجات' : CATS.find(c=>c.id===activeCat).label;
+  document.getElementById('shopCount').textContent = `${list.length} منتج`;
+  document.getElementById('metaCount').textContent = PRODUCTS.length.toLocaleString('ar');
+
+  const grid = document.getElementById('productGrid');
+  grid.innerHTML = list.map(p => `
+    <div class="product-card">
+      <div class="product-visual" style="background:${p.tint}; color:var(--ink)">
+        <span class="product-no">${p.no}</span>
+        ${ICONS[p.icon]}
+      </div>
+      <div class="product-info">
+        <span class="product-cat">${p.catLabel}</span>
+        <span class="product-name">${p.name}</span>
+        <div class="product-bottom">
+          <span class="product-price">${fmtPrice(p.price)}</span>
+          <button class="add-btn" data-add="${p.id}">أضف للسلة</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+
+  grid.querySelectorAll('[data-add]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const id = Number(btn.dataset.add);
+      cart[id] = (cart[id] || 0) + 1;
+      btn.textContent = 'أُضيف ✓';
+      btn.classList.add('added');
+      setTimeout(()=>{ btn.textContent = 'أضف للسلة'; btn.classList.remove('added'); }, 900);
+      renderCartUI();
+    });
+  });
+}
+
+/* ---------------- RENDER: CART DRAWER ---------------- */
+function renderCartUI(){
+  document.getElementById('cartCount').textContent = cartCount().toLocaleString('ar');
+  document.getElementById('drawerTotal').textContent = fmtPrice(cartTotal());
+
+  const body = document.getElementById('drawerBody');
+  const entries = Object.entries(cart);
+  if(entries.length === 0){
+    body.innerHTML = `<div class="empty-cart">السلة فاضية حاليًا.<br>تصفّح المنتجات وأضف اللي يعجبك.</div>`;
+  } else {
+    body.innerHTML = entries.map(([id, qty])=>{
+      const p = getProduct(Number(id));
+      return `
+        <div class="cart-line" data-line="${id}">
+          <div class="cart-line-visual" style="background:${p.tint}; color:var(--ink)">${ICONS[p.icon]}</div>
+          <div class="cart-line-info">
+            <span class="cart-line-name">${p.name}</span>
+            <span class="cart-line-price">${fmtPrice(p.price)}</span>
+            <div class="qty-row">
+              <button class="qty-btn" data-dec="${id}">−</button>
+              <span>${qty.toLocaleString('ar')}</span>
+              <button class="qty-btn" data-inc="${id}">+</button>
+              <span class="remove-link" data-remove="${id}">إزالة</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+
+    body.querySelectorAll('[data-inc]').forEach(b=>b.addEventListener('click', ()=>{
+      const id = b.dataset.inc; cart[id] = (cart[id]||0) + 1; renderCartUI();
+    }));
+    body.querySelectorAll('[data-dec]').forEach(b=>b.addEventListener('click', ()=>{
+      const id = b.dataset.dec;
+      cart[id] = (cart[id]||0) - 1;
+      if(cart[id] <= 0) delete cart[id];
+      renderCartUI();
+    }));
+    body.querySelectorAll('[data-remove]').forEach(b=>b.addEventListener('click', ()=>{
+      delete cart[b.dataset.remove]; renderCartUI();
+    }));
+  }
+
+  document.getElementById('goCheckoutBtn').disabled = entries.length === 0;
+}
+
+/* ---------------- DRAWER OPEN/CLOSE ---------------- */
+function openDrawer(){
+  document.getElementById('cartDrawer').classList.add('open');
+  document.getElementById('overlay').classList.add('open');
+}
+function closeDrawer(){
+  document.getElementById('cartDrawer').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+document.getElementById('cartOpenBtn').addEventListener('click', openDrawer);
+document.getElementById('closeDrawer').addEventListener('click', closeDrawer);
+document.getElementById('overlay').addEventListener('click', closeDrawer);
+
+/* ---------------- VIEW SWITCHING ---------------- */
+function showView(name){
+  document.getElementById('shopView').classList.toggle('hidden', name!=='shop');
+  document.getElementById('checkoutView').classList.toggle('active', name==='checkout');
+  window.scrollTo({top:0, behavior:'instant'});
+}
+
+document.getElementById('goCheckoutBtn').addEventListener('click', ()=>{
+  if(cartCount() === 0) return;
+  renderCheckoutSummary();
+  closeDrawer();
+  showView('checkout');
+});
+document.getElementById('backToShop').addEventListener('click', ()=> showView('shop'));
+
+/* ---------------- CHECKOUT SUMMARY ---------------- */
+function renderCheckoutSummary(){
+  const lines = document.getElementById('summaryLines');
+  lines.innerHTML = Object.entries(cart).map(([id, qty])=>{
+    const p = getProduct(Number(id));
+    return `<div class="summary-line"><span>${p.name} × ${qty.toLocaleString('ar')}</span><span>${fmtPrice(p.price*qty)}</span></div>`;
+  }).join('');
+  document.getElementById('summaryTotal').textContent = fmtPrice(cartTotal());
+}
+
+/* ---------------- REAL STRIPE CHECKOUT ---------------- */
+document.getElementById('goStripeBtn').addEventListener('click', async ()=>{
+  const btn = document.getElementById('goStripeBtn');
+  const errEl = document.getElementById('checkoutError');
+  errEl.style.display = 'none';
+  btn.disabled = true;
+  btn.textContent = 'جارٍ التحويل لصفحة الدفع...';
+  try {
+    const res = await fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cart }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'تعذر إنشاء جلسة الدفع');
+    window.location.href = data.url; // redirect to Stripe's hosted Checkout page
+  } catch (err) {
+    errEl.textContent = err.message;
+    errEl.style.display = 'block';
+    btn.disabled = false;
+    btn.textContent = 'المتابعة للدفع الآمن';
+  }
+});
+
+/* ---------------- INIT ---------------- */
+async function init(){
+  const res = await fetch('/api/products');
+  const base = await res.json();
+  PRODUCTS = base.map(p => ({ ...p, ...(DISPLAY_META[p.id] || {}) }));
+  renderCatNav();
+  renderGrid();
+  renderCartUI();
+}
+init();
+</script>
+</body>
+</html>
